@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=375px, initial-scale=1.0">
+<title>狍智汇科技OA平台-春风</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#4A90E2',
+secondary: '#6BB9F0'
+},
+borderRadius: {
+'none': '0px',
+'sm': '2px',
+DEFAULT: '4px',
+'md': '8px',
+'lg': '12px',
+'xl': '16px',
+'2xl': '20px',
+'3xl': '24px',
+'full': '9999px',
+'button': '4px'
+}
+}
+}
+}
+</script>
+<style>
+body { background-color: #F5F7FA; }
+.time-block { transition: all 0.3s ease; }
+.time-block.active { background-color: #FF4757; color: white; }
+.task-item { transition: all 0.3s ease; }
+.task-item.completed { background-color: #2ECC71; }
+.task-item.pending { background-color: #FF4757; }
+</style>
+</head>
+<body class="w-[375px] min-h-[762px] mx-auto">
+<nav class="fixed top-0 w-[375px] left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-3 z-50">
+<div class="text-lg font-bold">狗智汇科技 OA平台</div>
+<div class="text-sm mt-1">员工：春风 工号：A031</div>
+</nav>
+<main class="pt-20 px-4">
+<section class="bg-white rounded-lg shadow-sm p-4 mb-4">
+<div class="flex justify-between items-center mb-3">
+<h2 class="text-lg font-medium">工作安排</h2>
+<div id="currentTime" class="text-sm text-primary font-medium"></div>
+</div>
+<div class="flex justify-between items-center mb-4">
+<button onclick="prevWeek()" class="text-gray-600 hover:text-primary">
+<i class="fas fa-chevron-left"></i>
+</button>
+<div id="currentWeek" class="text-sm text-gray-600"></div>
+<button onclick="nextWeek()" class="text-gray-600 hover:text-primary">
+<i class="fas fa-chevron-right"></i>
+</button>
+</div>
+<div class="grid grid-cols-7 gap-2 mb-4">
+<div class="text-center cursor-pointer date-block" onclick="selectDate(0)">
+<div class="text-sm text-gray-600">一</div>
+<div id="mon-date" class="text-xs mt-1 p-2 rounded-full"></div>
+</div>
+<div class="text-center cursor-pointer date-block" onclick="selectDate(1)">
+<div class="text-sm text-gray-600">二</div>
+<div id="tue-date" class="text-xs mt-1 p-2 rounded-full"></div>
+</div>
+<div class="text-center cursor-pointer date-block" onclick="selectDate(2)">
+<div class="text-sm text-gray-600">三</div>
+<div id="wed-date" class="text-xs mt-1 p-2 rounded-full"></div>
+</div>
+<div class="text-center cursor-pointer date-block" onclick="selectDate(3)">
+<div class="text-sm text-gray-600">四</div>
+<div id="thu-date" class="text-xs mt-1 p-2 rounded-full"></div>
+</div>
+<div class="text-center cursor-pointer date-block" onclick="selectDate(4)">
+<div class="text-sm text-gray-600">五</div>
+<div id="fri-date" class="text-xs mt-1 p-2 rounded-full"></div>
+</div>
+<div class="text-center cursor-pointer date-block" onclick="selectDate(5)">
+<div class="text-sm text-gray-600">六</div>
+<div id="sat-date" class="text-xs mt-1 p-2 rounded-full"></div>
+</div>
+<div class="text-center cursor-pointer date-block" onclick="selectDate(6)">
+<div class="text-sm text-gray-600">日</div>
+<div id="sun-date" class="text-xs mt-1 p-2 rounded-full"></div>
+</div>
+</div>
+<div id="timeBlocksContainer" class="space-y-3">
+</div>
+</section>
+<section class="bg-white rounded-lg shadow-sm p-4">
+<h2 class="text-lg font-medium mb-3">待办事项</h2>
+<div class="space-y-3" id="taskList">
+<!-- 任务列表将通过 JavaScript 动态生成 -->
+</div>
+<button onclick="addTask()" class="mt-4 w-full bg-primary text-white py-2 rounded-button hover:bg-primary/90 transition-colors">
+添加新任务
+</button>
+</section>
+</main>
+<script>
+// 当前时间显示
+function updateCurrentTime() {
+const now = new Date();
+const dateTimeString = now.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+document.getElementById('currentTime').textContent = dateTimeString;
+}
+setInterval(updateCurrentTime, 1000);
+updateCurrentTime();
+// 日期处理
+let currentWeekStart = new Date();
+currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1);
+function updateWeekDates() {
+const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+for(let i = 0; i < 7; i++) {
+const date = new Date(currentWeekStart);
+date.setDate(currentWeekStart.getDate() + i);
+document.getElementById(`${days[i]}-date`).textContent = `${date.getDate()}日`;
+}
+const weekEndDate = new Date(currentWeekStart);
+weekEndDate.setDate(currentWeekStart.getDate() + 6);
+document.getElementById('currentWeek').textContent =
+`${months[currentWeekStart.getMonth()]}${currentWeekStart.getDate()}日 - ${months[weekEndDate.getMonth()]}${weekEndDate.getDate()}日`;
+}
+function prevWeek() {
+currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+updateWeekDates();
+}
+function nextWeek() {
+currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+updateWeekDates();
+}
+updateWeekDates();
+// 使用 localStorage 存储数据
+const taskList = document.getElementById('taskList');
+const timeBlocksContainer = document.getElementById('timeBlocksContainer');
+// 初始化数据
+if (!localStorage.getItem('timeBlockStates')) {
+localStorage.setItem('timeBlockStates', JSON.stringify({}));
+}
+if (!localStorage.getItem('tasks')) {
+localStorage.setItem('tasks', JSON.stringify([]));
+}
+let selectedDate = new Date().toISOString().split('T')[0];
+function getTimeBlockStateKey(date, timeIndex) {
+return `${date}_${timeIndex}`;
+}
+function renderTimeBlocks(date) {
+const states = JSON.parse(localStorage.getItem('timeBlockStates'));
+const timeSlots = [
+{ time: "09:00-12:00", index: 1 },
+{ time: "14:00-17:00", index: 2 },
+{ time: "19:00-22:00", index: 3 }
+];
+timeBlocksContainer.innerHTML = timeSlots.map(slot => {
+const stateKey = getTimeBlockStateKey(date, slot.index);
+const isActive = states[stateKey] ? 'active' : '';
+return `
+<div class="flex justify-between items-center p-3 bg-gray-50 rounded time-block ${isActive}" data-time="${slot.index}" data-date="${date}">
+<span>${slot.time}</span>
+<button class="text-primary hover:text-primary-dark">
+<i class="fas fa-check-circle"></i>
+</button>
+</div>
+`;
+}).join('');
+// 重新绑定点击事件
+document.querySelectorAll('.time-block').forEach(block => {
+block.addEventListener('click', () => {
+const timeIndex = block.dataset.time;
+const date = block.dataset.date;
+const stateKey = getTimeBlockStateKey(date, timeIndex);
+const states = JSON.parse(localStorage.getItem('timeBlockStates'));
+block.classList.toggle('active');
+states[stateKey] = block.classList.contains('active');
+localStorage.setItem('timeBlockStates', JSON.stringify(states));
+});
+});
+}
+function selectDate(dayIndex) {
+const date = new Date(currentWeekStart);
+date.setDate(currentWeekStart.getDate() + dayIndex);
+selectedDate = date.toISOString().split('T')[0];
+// 移除所有日期的选中状态
+document.querySelectorAll('.date-block').forEach(block => {
+block.querySelector('div:last-child').classList.remove('bg-primary', 'text-white');
+});
+// 添加选中状态到当前日期
+const selectedBlock = document.querySelectorAll('.date-block')[dayIndex];
+selectedBlock.querySelector('div:last-child').classList.add('bg-primary', 'text-white');
+renderTimeBlocks(selectedDate);
+}
+// 初始化时选中当前日期
+window.addEventListener('load', () => {
+const today = new Date();
+const dayOfWeek = today.getDay() || 7;
+selectDate(dayOfWeek - 1);
+});
+function isOverdue(deadline) {
+const now = new Date();
+const ddl = new Date(deadline);
+return now > ddl;
+}
+// 添加新的样式规则
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+.date-block div:last-child:hover {
+background-color: rgba(74, 144, 226, 0.1);
+}
+.date-block div:last-child {
+transition: all 0.3s ease;
+}
+</style>
+`);
+// 加载任务列表
+function loadTasks() {
+const tasks = JSON.parse(localStorage.getItem('tasks'));
+taskList.innerHTML = tasks.map((task, index) => {
+const isTaskOverdue = isOverdue(task.deadline);
+return `
+<div class="task-item flex flex-col p-3 bg-gray-50 rounded ${task.completed ? 'completed' : ''} ${!task.completed && isTaskOverdue ? 'pending' : ''}" data-index="${index}">
+<div class="flex justify-between items-center">
+<span>${task.text}</span>
+<div class="flex space-x-2">
+<button onclick="toggleTask(${index})" class="text-white px-2 py-1 rounded-button ${task.completed ? 'bg-green-500' : 'bg-primary'}">
+<i class="fas ${task.completed ? 'fa-check' : 'fa-circle'}"></i>
+</button>
+<button onclick="deleteTask(${index})" class="text-white bg-red-500 px-2 py-1 rounded-button">
+<i class="fas fa-trash"></i>
+</button>
+</div>
+</div>
+<div class="mt-2 text-sm ${!task.completed && isTaskOverdue ? 'text-red-500' : 'text-gray-500'}">
+截止日期：${task.deadline}
+</div>
+</div>
+`}).join('');
+}
+// 添加新任务
+function addTask() {
+const modalHtml = `
+<div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+<div class="bg-white p-4 rounded-lg w-[90%] max-w-[340px]">
+<h3 class="text-lg font-medium mb-4">添加新任务</h3>
+<div class="space-y-4">
+<div>
+<label class="block text-sm text-gray-600 mb-1">任务内容</label>
+<input type="text" id="taskInput" class="w-full px-3 py-2 border border-gray-300 rounded-button focus:outline-none focus:border-primary" placeholder="请输入任务内容">
+</div>
+<div>
+<label class="block text-sm text-gray-600 mb-1">截止日期</label>
+<div class="grid grid-cols-3 gap-2">
+<select id="yearSelect" class="px-2 py-2 border border-gray-300 rounded-button focus:outline-none focus:border-primary">
+${generateYearOptions()}
+</select>
+<select id="monthSelect" class="px-2 py-2 border border-gray-300 rounded-button focus:outline-none focus:border-primary">
+${generateMonthOptions()}
+</select>
+<select id="daySelect" class="px-2 py-2 border border-gray-300 rounded-button focus:outline-none focus:border-primary">
+${generateDayOptions(31)}
+</select>
+</div>
+</div>
+<div class="flex space-x-2 mt-6">
+<button onclick="closeTaskModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-button hover:bg-gray-50">取消</button>
+<button onclick="submitTask()" class="flex-1 px-4 py-2 bg-primary text-white rounded-button hover:bg-primary/90">确定</button>
+</div>
+</div>
+</div>
+</div>
+`;
+document.body.insertAdjacentHTML('beforeend', modalHtml);
+// 添加日期联动
+document.getElementById('monthSelect').addEventListener('change', updateDays);
+document.getElementById('yearSelect').addEventListener('change', updateDays);
+}
+function generateYearOptions() {
+const currentYear = new Date().getFullYear();
+let options = '';
+for(let year = currentYear; year <= currentYear + 5; year++) {
+options += `<option value="${year}">${year}年</option>`;
+}
+return options;
+}
+function generateMonthOptions() {
+let options = '';
+for(let month = 1; month <= 12; month++) {
+options += `<option value="${month}">${month}月</option>`;
+}
+return options;
+}
+function generateDayOptions(days) {
+let options = '';
+for(let day = 1; day <= days; day++) {
+options += `<option value="${day}">${day}日</option>`;
+}
+return options;
+}
+function updateDays() {
+const year = parseInt(document.getElementById('yearSelect').value);
+const month = parseInt(document.getElementById('monthSelect').value);
+const daySelect = document.getElementById('daySelect');
+const daysInMonth = new Date(year, month, 0).getDate();
+daySelect.innerHTML = generateDayOptions(daysInMonth);
+}
+function closeTaskModal() {
+const modal = document.getElementById('taskModal');
+if (modal) {
+modal.remove();
+}
+}
+function submitTask() {
+const taskInput = document.getElementById('taskInput');
+const year = document.getElementById('yearSelect').value;
+const month = document.getElementById('monthSelect').value;
+const day = document.getElementById('daySelect').value;
+if (!taskInput.value.trim()) {
+alert('请输入任务内容');
+return;
+}
+const tasks = JSON.parse(localStorage.getItem('tasks'));
+const deadline = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+tasks.push({
+text: taskInput.value.trim(),
+completed: false,
+deadline: deadline
+});
+localStorage.setItem('tasks', JSON.stringify(tasks));
+loadTasks();
+closeTaskModal();
+}
+// 切换任务状态
+function toggleTask(index) {
+const tasks = JSON.parse(localStorage.getItem('tasks'));
+tasks[index].completed = !tasks[index].completed;
+localStorage.setItem('tasks', JSON.stringify(tasks));
+loadTasks();
+}
+// 删除任务
+function deleteTask(index) {
+if (confirm('确定要删除这个任务吗？')) {
+const tasks = JSON.parse(localStorage.getItem('tasks'));
+tasks.splice(index, 1);
+localStorage.setItem('tasks', JSON.stringify(tasks));
+loadTasks();
+}
+}
+// 页面加载时初始化
+loadTasks();
+</script>
+</body>
+</html>
